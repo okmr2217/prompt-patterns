@@ -11,7 +11,8 @@ prompt-patterns/
 ├── claude-code/                        # Claude Code 向け
 │   ├── claude-workflow.md              # セッション管理・Git ワークフロー設計ガイド
 │   ├── versioning.md                   # バージョン更新作業ガイド
-│   └── claude-md-template.md           # CLAUDE.md 雛形（コピーして使う）
+│   ├── claude-md-template.md           # CLAUDE.md 雛形（コピーして使う）
+│   └── coding-rule.md                  # コーディングルール（Next.js / TypeScript）
 └── prompts/                            # 汎用プロンプト
     ├── snippets.md                     # よく使う依頼文スニペット集
     ├── app-intro-article.md            # アプリ紹介ブログ記事の執筆プロンプト
@@ -30,6 +31,7 @@ prompt-patterns/
 | [claude-workflow.md](./claude-code/claude-workflow.md) | セッション管理・Git ワークフロー・ドキュメント設計の全体ガイド | 新規プロジェクトに Claude Code を導入するとき |
 | [versioning.md](./claude-code/versioning.md) | バージョン更新の手順・CHANGELOG 記述ルール | `package.json` と `CHANGELOG.md` を更新するとき |
 | [claude-md-template.md](./claude-code/claude-md-template.md) | `CLAUDE.md` の雛形（プロジェクト固有部分を書き換えて使う） | 新規プロジェクトのセットアップ時 |
+| [coding-rule.md](./claude-code/coding-rule.md) | Next.js / TypeScript プロジェクト向けコーディングルール（型・設計・ファイル構成・エラーハンドリング） | CLAUDE.md に貼り付けてコーディング規約を Claude に伝えるとき |
 
 ### prompts/
 
