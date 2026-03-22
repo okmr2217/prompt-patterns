@@ -1,168 +1,87 @@
-# 🎧 YouTube Music プレイリスト自動生成ガイド
+# YouTube Music DJ
 
-## 概要
+再生履歴をAIに渡して、自分専用のプレイリストをJSON生成 → YouTube Musicに自動登録するツール。
 
-YouTube再生履歴（Google Takeout）を分析し、ytmusicapi用のJSONプレイリストデータを生成した。
-このドキュメントは他セッションでの再利用・追加生成のためのリファレンス。
+## 全体の流れ
 
----
-
-## JSONスキーマ仕様
-
-```json
-{
-  "playlist_name": "プレイリスト名",
-  "description": "説明文",
-  "tracks": [
-    {
-      "title": "曲名",
-      "artist": "アーティスト名",
-      "priority": "high | medium | low",
-      "tags": ["ジャンルタグ"],
-      "play_count": 28,
-      "mood": "energy | chill | mixed | neutral | refresh",
-      "march_2026_plays": 7
-    }
-  ]
-}
-```
-
-### フィールド定義
-
-| フィールド | 必須 | 型 | 説明 |
-|-----------|------|-----|------|
-| `title` | ✅ | string | 曲名（YouTube Music上の表記に合わせる） |
-| `artist` | ✅ | string | アーティスト名（Topic名から`- Topic`を除いた形） |
-| `priority` | ✅ | string | `high`=15回以上or直近ヘビロテ / `medium`=8〜14回 / `low`=7回以下 |
-| `tags` | ✅ | string[] | ジャンル・サブジャンルタグ（下記タグ一覧参照） |
-| `play_count` | ✅ | number | 全期間の再生回数 |
-| `mood` | ✅ | string | `energy` / `chill` / `mixed` / `neutral` / `refresh` |
-| `march_2026_plays` | - | number | 2026年3月の再生回数（最近のトレンド指標。0の場合は省略） |
-
-### タグ一覧
-
-**メインジャンル:** `日本語ラップ` / `海外ラップ` / `J-POP` / `EDM` / `R&B`
-
-**サブジャンル:** `trap` / `drill` / `UK` / `classic` / `other`
-
-フィルタ時は `--tags 日本語ラップ` のようにOR条件で絞り込み可能。
-
-### mood定義
-
-| mood | 意味 | 代表アーティスト |
-|------|------|-----------------|
-| `energy` | アガる・テンション高め | Watson, BAD HOP, Pop Smoke, Central Cee |
-| `chill` | メロウ・落ち着いた | Kid Cudi, 6LACK, Frank Ocean, Mac Miller |
-| `mixed` | 曲によって両方 | ZUTOMAYO, Tyler The Creator |
-| `neutral` | 分類困難 | A Tribe Called Quest, 2Pac |
-| `refresh` | J-POPなど息抜き系 | ずとまよ, ヨルシカ, ポルカ |
+1. Google Takeoutで再生履歴をエクスポート
+2. AIチャットに履歴をアップロードし、好みの分析レポートを作成（任意）
+3. AIチャットでプレイリストをJSON生成
+4. `python ytmusic_dj.py playlist.json` でYouTube Musicにプレイリスト作成
 
 ---
 
-## 生成済みプレイリスト一覧（8本）
+## Step 1: 再生履歴のエクスポート
 
-| # | ファイル名 | プレイリスト名 | 曲数 | 内容 |
-|---|-----------|--------------|------|------|
-| 1 | `01_heavyrotation_top30.json` | ヘビロテ TOP30 | 30 | 全期間play_count上位 |
-| 2 | `02_jp_rap_only.json` | 日本語ラップ Only | 30 | 日本語ラップのヘビロテ曲 |
-| 3 | `03_foreign_rap_only.json` | 海外ラップ Only | 30 | 海外ヒップホップのヘビロテ曲 |
-| 4 | `04_march2026_mix.json` | 2026年3月 ヘビロテMIX | 30 | 直近の再生データ基準 |
-| 5 | `05_chill_mix.json` | チル系ミックス | 25 | Kid Cudi, 6LACK, Frank Ocean系 |
-| 6 | `06_energy_mix.json` | エナジー系ミックス | 25 | Watson, BAD HOP, Pop Smoke系 |
-| 7 | `07_classic_hiphop.json` | クラシック ヒップホップ | 20 | 2Pac, Biggie, Dre, ATCQ |
-| 8 | `08_jpop_refresh.json` | J-POP 息抜き | 20 | ずとまよ, ヨルシカ, ポルカ |
+[Google Takeout](https://takeout.google.com/) から再生履歴を取得する。
 
----
+1. Google Takeoutにアクセス
+2. 「選択をすべて解除」を押す
+3. 「YouTube と YouTube Music」だけにチェックを入れる
+4. コンテンツオプションで **「履歴」だけ** を選択する
+5. エクスポートの設定: ファイル形式は **JSON**、サイズは **2GB** で十分
+6. エクスポートを実行し、完了したらダウンロード
 
-## アーティスト分類マスター
-
-### 日本語ラップ（主要）
-
-Watson, Yvngboi P, eyden, GREEN KIDS, Playsson, Eric.B.Jr., BAD HOP, ¥ellow Bucks, KEIJU, DJ KANJI, Masato Hayashi, Tee Shyne, The Mikado, Lunv Loyal, Sad Kid Yaz, Yvng Patra, Kaneee, Bene Baby, LEX, Kohjiya, Jin Dogg, Young zetton, RYKEY, Jinmenusagi, MonyHorse, Bonbero, YZERR, Leon Fanourakis, Awich, ANARCHY, Seeda, MC TYSON, AK-69, JP THE WAVY, MIYACHI, Benjazzy, YOU THUG, DADA, Elle Teresa, Kvi Baba, IO, STUTS, Tokyo Young Vision, 03- Performance, BON-K, Candee, BADSAIKUSH, DJ CHARI, DJ Ryow, AKLO
-
-### 海外ラップ（主要）
-
-Central Cee, Drake, Pop Smoke, A$AP Rocky, Eminem, Dave, Kendrick Lamar, J. Cole, XXXTENTACION, Lil Tjay, Future, Juice WRLD, Tyler The Creator, Kid Cudi, Roddy Ricch, Lil Uzi Vert, Childish Gambino, Travis Scott, A Tribe Called Quest, The Notorious B.I.G., 2Pac, Dr. Dre, 50 Cent, Ice Spice, Lil Baby, Jack Harlow, Meek Mill, JAY-Z, D-Block Europe, Freddie Gibbs, Mac Miller, 21 Savage
-
-### J-POP
-
-ZUTOMAYO, Polkadot Stingray, Yorushika, あいみょん, Kenshi Yonezu, YOASOBI, Rokudenashi, tofubeats, AZU
-
-### EDM
-
-DJ Snake, Major Lazer, Marshmello, Avicii
-
-### R&B
-
-Justin Bieber, The Weeknd, Post Malone, Akon, 6LACK, Frank Ocean, Jhené Aiko, Ed Sheeran, Russ
+> **他のデータ（再生リスト、動画、コメント等）は不要。** AIに好みを分析させるには、再生回数と時系列がわかる履歴データだけで十分。
 
 ---
 
-## ユーザーの音楽嗜好サマリー
+## Step 2: 好みの分析レポートを作成する（任意）
 
-### コアプロファイル
+プレイリスト生成の前に、自分の音楽の好みを分析レポートとしてまとめておくと便利。プレイリスト作成時の指示が具体的になるし、別の会話で使い回すこともできる。
 
-- **メインジャンル:** ヒップホップ / ラップ（全体の7〜8割）
-- **日本語 vs 海外:** ほぼ半々。やや日本語ラップ寄り
-- **好みのスタイル:** ストリート系・トラップ寄り。リアル志向
-- **データ期間:** 2024年8月〜2026年3月（本格利用は2025年11月〜）
-- **総再生数:** 23,756回（うちYouTube Music: 5,570回）
+### プロンプト
 
-### TOP5アーティスト（全期間）
-
-1. **Watson** — 347回。日本語ラップで圧倒的1位
-2. **Central Cee** — 311回。UK drill/ラップのメイン
-3. **Yvngboi P** — 146回。最近（2026年3月）最もハマっている
-4. **eyden** — 106回
-5. **ZUTOMAYO** — 105回。ヒップホップ以外で最多
-
-### 最近の傾向（2026年3月）
-
-Yvngboi Pが急上昇（月81回）。Watson, Central Ceeは安定。Sad Kid Yaz, RYKEY, Eric.B.Jr.への関心が増加中。Pop Smokeの名曲を繰り返し聴く傾向。
-
-### 好みのキーワード
-
-- トラップビート、ドリル、ストリート
-- 日本語ラップのリアル志向（Watson的な世界観）
-- UK ドリル / グライム（Central Cee, Dave）
-- 90sクラシック（ATCQ, Biggie, 2Pac）も好む
-- チルタイムはKid Cudi, 6LACK, Frank Ocean
-- 息抜きにずとまよ、ヨルシカ
-
----
-
-## ytmusic_dj.py での使い方
-
-```powershell
-# ドライラン（検索テスト）
-python ytmusic_dj.py playlists/01_heavyrotation_top30.json --dry-run
-
-# 本番実行
-python ytmusic_dj.py playlists/04_march2026_mix.json
-
-# タグ絞り込み
-python ytmusic_dj.py playlists/01_heavyrotation_top30.json --tags drill
-python ytmusic_dj.py playlists/01_heavyrotation_top30.json --tags 日本語ラップ
-
-# ムード絞り込み
-python ytmusic_dj.py playlists/01_heavyrotation_top30.json --mood energy
-
-# 優先度絞り込み
-python ytmusic_dj.py playlists/01_heavyrotation_top30.json --priority high
-
-# 組み合わせ
-python ytmusic_dj.py playlists/01_heavyrotation_top30.json --tags 海外ラップ --mood chill
-```
-
----
-
-## 新しいプレイリストを追加生成する場合
-
-Claudeへのプロンプト例:
+再生履歴JSONをアップロードした上で、以下を送信する。
 
 ```
-以下のJSON形式でプレイリストデータを生成して。
-用途はytmusicapiでYouTube Musicプレイリストを自動作成するスクリプトに食わせること。
+この再生履歴データを分析して、音楽の好みレポートをMarkdownで作成してください。
+
+## レポートに含める項目
+1. データ概要（期間、総再生数、YouTube Music再生数）
+2. コアの音楽ジャンル — ジャンルごとにアーティストを再生回数つきでリストアップ
+3. 最も再生された曲 TOP 15（回数・曲名・アーティストの表形式）
+4. 最近の傾向（直近1ヶ月で特に再生が多いアーティスト）
+5. 好みの傾向まとめ（メインジャンル、スタイル、ムード傾向などを箇条書き）
+6. YouTube動画（音楽以外）でよく観るジャンル
+
+## ルール
+- 再生回数は実データから正確にカウントすること
+- アーティストは再生回数の多い順に並べる
+- 代表曲も添える（特にヘビロテしている曲）
+```
+
+> **このレポートをプレイリスト生成の会話に貼ると、履歴ファイルを毎回アップロードしなくても好みを伝えられる。**
+
+---
+
+## Step 3: AIにプレイリストを生成させる
+
+claude.ai などのAIチャットで作業する。Claude CodeではなくチャットUIのほうが、「もうちょっとチルめに」「この曲入れ替えて」といった対話的な調整がしやすい。
+
+### システム指示（最初に1回送る）
+
+再生履歴JSONをアップロードした上で、以下を送信する。エクスポート形式はJSON（HTMLよりトークン効率が良い）。
+
+```
+あなたはYouTube Musicのプレイリスト作成アシスタントです。
+
+## 役割
+アップロードされた再生履歴データからユーザーの音楽の好みを把握し、リクエストに応じたプレイリストをJSON形式で生成すること。
+
+## 再生履歴の読み取り方
+- 再生回数の多いアーティスト・曲を把握する
+- ジャンル傾向を特定する
+- 最近の傾向と過去の傾向を区別する
+
+## 出力ルール
+- 実在する曲のみ出力すること。架空の曲を捏造しない
+- 曲名・アーティスト名はYouTube Musicの検索でヒットしやすい正式表記にする
+- JSON以外の補足（選曲意図など）はJSONの前後に書いてよい
+- youtube動画リンクの検証はスクリプト側で行うので不要
+
+## 出力形式
+必ず以下のJSON形式で、コードブロックで囲んで出力すること。
 
 {
   "playlist_name": "プレイリスト名",
@@ -170,15 +89,51 @@ Claudeへのプロンプト例:
   "tracks": [
     {
       "title": "曲名",
-      "artist": "アーティスト名",
-      "priority": "high",
-      "tags": ["日本語ラップ", "trap"],
-      "play_count": 28,
-      "mood": "energy"
+      "artist": "アーティスト名"
     }
   ]
 }
+```
 
-条件: [ここに条件を書く]
-参考: このチャットの音楽嗜好サマリーとアーティスト分類マスターを使って。
+### リクエスト例
+
+**シンプル**
+```
+テンション上がる曲で30曲のプレイリスト作って。
+```
+
+**条件付き**
+```
+深夜ドライブ用のプレイリストを50曲で作って。
+- 日本語ラップ中心
+- 前半はバチバチ系、後半はメロウに
+- 知らない曲多めで
+```
+
+**深掘り系**
+```
+自分が好きそうだけどまだ聴いたことなさそうな曲だけで20曲作って。
+```
+
+---
+
+## Step 4: スクリプトでプレイリスト作成
+
+AIが出力したJSONを `playlist.json` として保存し、実行する。
+
+```bash
+# 基本
+python ytmusic_dj.py playlist.json
+
+# 検索結果だけ確認（プレイリスト作成しない）
+python ytmusic_dj.py playlist.json --dry-run
+```
+
+スクリプトが各曲をYouTube Musicで検索し、見つかった曲でプレイリストを自動作成する。見つからなかった曲はスキップされる。
+
+### セットアップ
+
+```bash
+pip install ytmusicapi
+ytmusicapi browser  # 認証ファイル(browser.json)を生成
 ```
