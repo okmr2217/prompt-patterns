@@ -15,9 +15,9 @@ prompt-patterns/
 │   └── coding-rule.md                  # コーディングルール（Next.js / TypeScript）
 └── prompts/                            # 汎用プロンプト
     ├── snippets.md                     # よく使う依頼文スニペット集
-    ├── app-intro-article.md            # アプリ紹介ブログ記事の執筆プロンプト
     ├── record-music-identification.md  # 録音ファイルから曲を特定するガイド
-    └── playlist_generation_guide.md    # YouTube Musicプレイリスト自動生成ガイド
+    ├── playlist_generation_guide.md    # YouTube Musicプレイリスト自動生成ガイド
+    └── furikaeri-prompt.md             # 日次振り返りレポート生成プロンプト
 ```
 
 ---
@@ -38,9 +38,9 @@ prompt-patterns/
 | ファイル | 概要 | 使う場面 |
 |----------|------|----------|
 | [snippets.md](./prompts/snippets.md) | コードレビュー・バグ調査・実装依頼などの短い依頼文テンプレート | 毎日のやり取りで使い回す |
-| [app-intro-article.md](./prompts/app-intro-article.md) | アプリ紹介ブログ記事の執筆プロンプト | 自作アプリの紹介記事を書くとき |
 | [record-music-identification.md](./prompts/record-music-identification.md) | 録音ファイルから曲名・YouTubeリンクを特定するガイド | 音声ファイルの曲調査をするとき |
 | [playlist_generation_guide.md](./prompts/playlist_generation_guide.md) | Google Takeout再生履歴をAIに渡してプレイリストJSONを生成し、ytmusicapi（ytmusic_dj.py）でYouTube Musicに自動登録するStep by Stepガイド | YouTube Musicにプレイリストを自動作成するとき |
+| [furikaeri-prompt.md](./prompts/furikaeri-prompt.md) | furikaeri-mcp の get_day_summary を使い、日次振り返りレポートを生成するプロンプト | Claude.ai でその日の活動・タスク・体験をまとめるとき |
 
 ---
 
