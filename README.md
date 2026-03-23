@@ -40,7 +40,7 @@ prompt-patterns/
 | [snippets.md](./prompts/snippets.md) | コードレビュー・バグ調査・実装依頼などの短い依頼文テンプレート | 毎日のやり取りで使い回す |
 | [record-music-identification.md](./prompts/record-music-identification.md) | 録音ファイルから曲名・YouTubeリンクを特定するガイド | 音声ファイルの曲調査をするとき |
 | [playlist_generation_guide.md](./prompts/playlist_generation_guide.md) | Google Takeout再生履歴をAIに渡してプレイリストJSONを生成し、ytmusicapi（ytmusic_dj.py）でYouTube Musicに自動登録するStep by Stepガイド | YouTube Musicにプレイリストを自動作成するとき |
-| [furikaeri-prompt.md](./prompts/furikaeri-prompt.md) | furikaeri-mcp の get_day_summary を使い、日次振り返りレポートを生成するプロンプト | Claude.ai でその日の活動・タスク・体験をまとめるとき |
+| [furikaeri-prompt.md](./prompts/furikaeri-prompt.md) | furikaeri-mcp の get_day_summary を使い、冒頭サマリ・タイムライン・タスク・ピーク体験・支出を含む日次振り返りレポートを生成するプロンプト | Claude.ai でその日の活動・タスク・体験をまとめるとき |
 
 ---
 
